@@ -2,91 +2,101 @@ from hisDataComp import annualFantasyData as annual
 from weeklyDataComp import weeklyFantasyData as weekly
 from equation_sheet import equations as eq
 from pathlib import Path
-import json
 
 def historicData():
     yearMax = 22
     position = ['qb', 'rb', 'wr', 'te', 'k', 'dst']
     
     year = []
-    yrPlayers = []
     x = range(0,100)
-    for y in range(2, yearMax+1):
+    for y in range(0, yearMax+1):
             if x[y] < 10:
                 years = '200{}'.format(x[y])
             else:
                 years = '20{}'.format(x[y])
             year.append(years)
-            
-    for pos in range(0,6):
-        posPlayers = []
-        for y in range(0, len(year)):
-            file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\annual_raw\\{} {} stats.txt'.format(year[y], position[pos])
+    
+    masterDictionary = {}
+    for pos in range(0, 6):
+        dictionary = {}
+        for y in range(2,len(year)):
+            file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\annual_raw\\{} {} stats.json'.format(year[y], position[pos])
             path = Path(file)
             
-            if path.is_file() == False:
-                annual.historicalDataScraper(annual.tablePosition(position[pos], year[y]), position[pos], year[y])
+            if path.is_file() == True:
+                data = eq.readEq(file)
+                
+            else:
+                data = annual.historicalDataScraper(annual.tablePosition(position[pos], year[y]), position[pos], year[y])
+                
+            playerDictionary = annual.formatData(data, position[pos], year[y])
+            txtyear = 'Player Year: {}'.format(year[y])
+            dictionary[txtyear] = playerDictionary
             
-            posPlayers.extend(annual.formatData(file, position[pos], year[y]))
-        yrPlayers.append(posPlayers)
-
-    file2 = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\raw data.txt'
-    path2 = Path(file2)
-
-    if path2.is_file() == False:
-        annual.createFile(yrPlayers)
-
+            print('{} {} file complete'.format(year[y], position[pos]))
+        
+        file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\annual_pos_data\\{} Data.json'.format(position[pos])
+        eq.writeEq(file, dictionary)
+        
+        txtpos = 'Player Position: {}'.format(position[pos])
+        masterDictionary[txtpos] = dictionary
+        
+        file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\Annual Master Database.json'
+        eq.writeEq(file, masterDictionary)
+        
 def weeklyData():
     yearMax = 22
     position = ['qb', 'rb', 'wr', 'te', 'k', 'dst']
     
     year = []
     x = range(0,100)
-    for y in range(2, yearMax+1):
+    for y in range(0, yearMax+1):
             if x[y] < 10:
                 years = '200{}'.format(x[y])
             else:
                 years = '20{}'.format(x[y])
             year.append(years)
     
-    yrPlayers = []
     current = year[len(year)-1]
+    masterDictionary = {}
     for pos in range(0, 6):
-        posPlayers = []
-        for y in range(0,len(year)):
+        dictionary = {}
+        for y in range(2,len(year)):
             if year[y] < '2021':
                 w = 17
             if year[y] == current:
                 w = 17
             else:
                 w = 18
+            
+            weekDictionary = {}
             for week in range(1, w):
                 file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\weekly_raw\\{} {} {} stats.json'.format(year[y], week, position[pos])
                 path = Path(file)
                 
                 if path.is_file() == True:
                     data = eq.readEq(file)
+                    
                 else:
                     data = weekly.weeklyDataScraper(weekly.tablePosition(position[pos], year[y], week), position[pos], year[y], week)
-
-                posPlayers.extend(weekly.formatData(data, position[pos], year[y], week))
-                print('{} {} {} file complete'.format(year[y], week, position[pos]))
+                    
+                playerDictionary = weekly.formatData(data, position[pos], year[y], week)
+                txtweek = 'Player Week: {}'.format(week)
+                weekDictionary[txtweek] = playerDictionary
                 
-            yrPlayers.append(posPlayers)
-            file = 'Data.json'
-            eq.writeEq(file, yrPlayers)
+                print('{} {} {} file complete'.format(year[y], week, position[pos]))
+            
+            txtyear = 'Player Year: {}'.format(year[y])
+            dictionary[txtyear] = weekDictionary
+            
+            file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\weekly_pos_data\\{} Data.json'.format(position[pos])
+            eq.writeEq(file, dictionary)
+        
+        txtpos = 'Player Position: {}'.format(position[pos])
+        masterDictionary[txtpos] = dictionary
+        
+        file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\Weekly Master Database.json'
+        eq.writeEq(file, masterDictionary)
 
-def test():
-    year = '2021'
-    position = 'te'
-    week = 3
-    posPlayers =[]
-    
-    data = weekly.weeklyDataScraper(weekly.tablePosition(position, year, week), position, year, week)
-    posPlayers.extend(weekly.formatData(data, position, year, week))
-    
-    print(posPlayers)
-    
-#test()
-#historicData()
+historicData()
 weeklyData()

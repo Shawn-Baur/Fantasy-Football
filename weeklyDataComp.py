@@ -1,14 +1,11 @@
 from bs4 import BeautifulSoup as bs
 from equation_sheet import equations as eq
-import requests, re, json
+import requests
 
 class weeklyFantasyData:
     def weeklyDataScraper(URL, position, year, week):
         data = requests.get(URL).text
         soup = bs(data, 'html.parser')
-        
-        #find elements
-        #text_table = soup.find('table').get_text()
         
         data = []
         table = soup.find('table')
@@ -18,7 +15,7 @@ class weeklyFantasyData:
         for row in rows:
             cols = row.find_all('td')
             cols = [ele.text.strip() for ele in cols]
-            data.append([ele for ele in cols if ele]) # Get rid of empty values
+            data.append([ele for ele in cols if ele])
         
         file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\weekly_raw\\{} {} {} stats.json'.format(year, week, position)
         eq.writeEq(file, data)
@@ -42,7 +39,7 @@ class weeklyFantasyData:
             teams.append(names[i].pop())
         
         if position == 'qb':
-            filPlayers = []
+            dictionary = {}
             for i in range(0, len(table)):
                 rank = table[i][0]
                 name = names[i]
@@ -58,10 +55,30 @@ class weeklyFantasyData:
                 tdRush = table[i][12]
                 fl = table[i][13]
                 
-                filPlayers.append([year, week, position, rank, name, team, cmpPass, attPass, ydsPass, tdPass, pic, sacks, attRush, ydsRush, tdRush, fl])
-        
+                formatName = '{} {}'.format(name[0], name[1])
+                
+                txtrank = 'Player Rank: {}'.format(rank)
+                dictionary[txtrank] = {
+                            'year': year,
+                            'week': week,
+                            'name': formatName,
+                            'position': position, 
+                            'rank': rank,
+                            'team': team,
+                            'cmpPass': cmpPass,
+                            'attPass': attPass,
+                            'ydsPass': ydsPass, 
+                            'tdPass': tdPass,
+                            'pic': pic,
+                            'sacks': sacks,
+                            'attRush': attRush, 
+                            'ydsRush': ydsRush, 
+                            'tdRush': tdRush,
+                            'fl': fl
+                            }
+    
         if position == 'rb':
-            filPlayers = []
+            dictionary = {}
             for i in range(0, len(table)):
                 rank = table[i][0]
                 name = names[i]
@@ -76,11 +93,31 @@ class weeklyFantasyData:
                 ydsPass = table[i][10]
                 tdPass = table[i][12]
                 fl = table[i][13]
-        
-                filPlayers.append([year, week, position, rank, name, team, attRush, ydsRush, long, twtyPls, tdRush, rec, tgt, ydsPass, tdPass, fl])
-        
+                
+                formatName = '{} {}'.format(name[0], name[1])
+                
+                txtrank = 'Player Rank: {}'.format(rank)
+                dictionary[txtrank] = {
+                            'year': year,
+                            'week': week,
+                            'name': formatName,
+                            'position': position, 
+                            'rank': rank,
+                            'team': team,
+                            'attRush': attRush, 
+                            'ydsRush': ydsRush,
+                            'long': long,
+                            'twtyPls': twtyPls,
+                            'tdRush': tdRush,
+                            'rec': rec,
+                            'tgt': tgt,
+                            'ydsPass': ydsPass, 
+                            'tdPass': tdPass,
+                            'fl': fl
+                            }
+    
         if position == 'wr' or position == 'te':
-            filPlayers = []
+            dictionary = {}
             for i in range(0, len(table)):
                 rank = table[i][0]
                 name = names[i]
@@ -95,11 +132,31 @@ class weeklyFantasyData:
                 ydsRush = table[i][10]
                 tdRush = table[i][11]
                 fl = table[i][12]
-        
-                filPlayers.append([year, week, position, rank, name, team, rec, tgt, ydsPass, long, twtyPls, tdPass, attRush, ydsRush, tdRush, fl])
+                
+                formatName = '{} {}'.format(name[0], name[1])
+                
+                txtrank = 'Player Rank: {}'.format(rank)
+                dictionary[txtrank] = {
+                            'year': year,
+                            'week': week,
+                            'name': formatName,
+                            'position': position, 
+                            'rank': rank,
+                            'team': team,
+                            'rec': rec,
+                            'tgt': tgt,
+                            'ydsPass': ydsPass,
+                            'long': long,
+                            'twtyPls': twtyPls,
+                            'tdPass': tdPass,
+                            'attRush': attRush, 
+                            'ydsRush': ydsRush,
+                            'tdRush': tdRush,
+                            'fl': fl
+                            }
         
         if position == 'k':
-            filPlayers = []
+            dictionary = {}
             for i in range(0, len(table)):
                 rank = table[i][0]
                 name = names[i]
@@ -115,10 +172,30 @@ class weeklyFantasyData:
                 xpt = table[i][11]
                 xpa = table[i][12]
 
-                filPlayers.append([year, week, position, rank, name, team, fg, fga, long, u20, u30, u40, u50, p50, xpt, xpa])
+                formatName = '{} {}'.format(name[0], name[1])
                 
+                txtrank = 'Player Rank: {}'.format(rank)
+                dictionary[txtrank] = {
+                            'year': year,
+                            'week': week,
+                            'name': formatName,
+                            'position': position, 
+                            'rank': rank,
+                            'team': team,
+                            'fg': fg,
+                            'fga': fga,
+                            'long': long,
+                            'u20': u20,
+                            'u30': u30,
+                            'u40': u40,
+                            'u50': u50,
+                            'p50': p50,
+                            'xpt': xpt,
+                            'xpa': xpa
+                            }
+    
         if position == 'dst':
-            filPlayers = []
+            dictionary = {}
             for i in range(0, len(table)):
                 rank = table[i][0]
                 name = names[i]
@@ -130,10 +207,24 @@ class weeklyFantasyData:
                 defTD = table[i][6]
                 sfty = table[i][7]
                 spcTD = table[i][8]
-
-                filPlayers.append([year, week, position, rank, name, team, sacks, pic, fr, ff, defTD, sfty, spcTD])
+                
+                formatName = '{} {}'.format(name[0], name[1])
+                
+                txtrank = 'Player Rank: {}'.format(rank)
+                dictionary[txtrank] = {
+                            'year': year,
+                            'week': week,
+                            'name': formatName,
+                            'position': position, 
+                            'rank': rank,
+                            'team': team,
+                            'sacks': sacks,
+                            'int': pic,
+                            'fr': fr,
+                            'ff': ff,
+                            'defTD': defTD,
+                            'sfty': sfty,
+                            'spcTD': spcTD
+                            }
         
-        file = 'raw_week_data.json'
-        eq.writeEq(file, filPlayers)
-        
-        return filPlayers
+        return dictionary

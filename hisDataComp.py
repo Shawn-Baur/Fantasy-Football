@@ -1,238 +1,225 @@
 from bs4 import BeautifulSoup as bs
-import requests, re
+from equation_sheet import equations as eq
+import requests
 
 class annualFantasyData:
     def historicalDataScraper(URL, position, year):
         data = requests.get(URL).text
         soup = bs(data, 'html.parser')
         
-        #find elements
-        text_table = soup.find('table').get_text()
+        data = []
+        table = soup.find('table')
+        table_body = table.find('tbody')
+
+        rows = table_body.find_all('tr')
+        for row in rows:
+            cols = row.find_all('td')
+            cols = [ele.text.strip() for ele in cols]
+            data.append([ele for ele in cols if ele])
         
-        file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\annual_raw\\{} {} stats.txt'.format(year, position)
-        f = open(file, "a")
-        f.truncate(0)
-        doc = text_table
-        print(doc, file=f)
-        f.close()
+        file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\annual_raw\\{} {} stats.json'.format(year, position)
+        eq.writeEq(file, data)
+        return data
 
     def tablePosition(position, year):
         URL = 'https://www.fantasypros.com/nfl/stats/{}.php?year={}'.format(position, year)
         return URL
     
     def formatData(table, position, year):
-        text_file = open(table, 'r')
-        old = text_file.read()
+        unfilNames = []
+        for i in range(0, len(table)):
+            unfilNames.append(table[i][1])
         
-        #Split text file into array line by line
-        modified = old.split('\n')
+        names =[]
+        for i in range(0, len(unfilNames)):
+            names.append(unfilNames[i].split(' '))
         
-        #Remove unwanted data
-        modified = [i for i in modified if i != '']
-        modified = [i for i in modified if i != '\xa0']
-        modified = [i for i in modified if i != '\d+']
+        teams = []
+        for i in range(0, len(names)):
+            teams.append(names[i].pop())
         
         if position == 'qb':
-            divisor = 16
-        if position == 'rb':
-            divisor = 16
-        if position == 'wr' or position == 'te':
-            divisor = 15
-        if position == 'k':
-            divisor = 15
-        if position == 'dst':
-            divisor = 11
-        
-        numPlayers = ((len(modified) // divisor)-1)
-        
-        #Different Stats accumulated
-        unfilPlayers = []
-        temp = []
-        temp2 = []
-        attPass = []
-        pct = []
-        ydsPass = []
-        tdPass = []
-        pic = []
-        sacks = []
-        attRush = []
-        ydsRush = []
-        tdRush = []
-        long = []
-        twtyPls = []
-        fl = []
-        receptions = []
-        fg = []
-        fga = []
-        u20 = []
-        u30 = []
-        u40 = []
-        p50 = []
-        xpt = []
-        xpa = []
-        tgt = []
-        fumbleR = []
-        fumbleF = []
-        defTD = []
-        sfty = []
-        list1 = []
-        spcTD = []
-        g = []
-        
-        for i in range(0, numPlayers):
-            if position == 'qb':
-                spaces = i*16
-                unfilPlayers.append(modified[17 + spaces])
-                attPass.append(modified[18 + spaces])
-                pct.append(modified[19 + spaces])
-                ydsPass.append(modified[20 + spaces])
-                tdPass.append(modified[22 + spaces])
-                pic.append(modified[23 + spaces])
-                sacks.append(modified[24 + spaces])
-                attRush.append(modified[25 + spaces])
-                ydsRush.append(modified[26 + spaces])
-                tdRush.append(modified[27 + spaces])
-                fl.append(modified[28 + spaces])
-                g.append(modified[29 + spaces])
-            
-            if position == 'rb':
-                spaces = i*16
-                unfilPlayers.append(modified[17 + spaces])
-                ydsRush.append(modified[18 + spaces])
-                long.append(modified[20 + spaces])
-                twtyPls.append(modified[21 + spaces])
-                tdRush.append(modified[22 + spaces])
-                receptions.append(modified[23 + spaces])
-                tgt.append(modified[24 + spaces])
-                ydsPass.append(modified[25 + spaces])
-                tdPass.append(modified[27 + spaces])
-                fl.append(modified[28 + spaces])
-                g.append(modified[29 + spaces])
-            
-            if position == 'wr' or position == 'te':
-                spaces = i*15
-                unfilPlayers.append(modified[16 + spaces])
-                tgt.append(modified[17 + spaces])
-                ydsPass.append(modified[18 + spaces])
-                long.append(modified[20 + spaces])
-                twtyPls.append(modified[21 + spaces])
-                tdPass.append(modified[22 + spaces])
-                attRush.append(modified[23 + spaces])
-                ydsRush.append(modified[24 + spaces])
-                tdRush.append(modified[25 + spaces])
-                fl.append(modified[26 + spaces])
-                g.append(modified[27 + spaces])
-            
-            if position == 'k':
-                spaces = i*15
-                unfilPlayers.append(modified[15 + spaces])
-                fga.append(modified[16 + spaces])
-                pct.append(modified[17 + spaces])
-                long.append(modified[18 + spaces])
-                u20.append(modified[19 + spaces])
-                u30.append(modified[20 + spaces])
-                u40.append(modified[21 + spaces])
-                p50.append(modified[22 + spaces])
-                xpt.append(modified[23 + spaces])
-                xpa.append(modified[24 + spaces])
-                g.append(modified[25 + spaces])
+            dictionary = {}
+            for i in range(0, len(table)):
+                rank = table[i][0]
+                name = names[i]
+                team = teams[i]
+                cmpPass = table[i][2]
+                attPass = table[i][3]
+                ydsPass = table[i][5]
+                tdPass = table[i][7]
+                pic = table[i][8]
+                sacks = table[i][9]
+                attRush = table[i][10]
+                ydsRush = table[i][11]
+                tdRush = table[i][12]
+                fl = table[i][13]
                 
-            if position == 'dst':
-                spaces = i*11
-                unfilPlayers.append(modified[11 + spaces])
+                formatName = '{} {}'.format(name[0], name[1])
                 
-                string = unfilPlayers[i]
-                arr = string.split()
-                exists = '49ers' in arr
-                
-                if exists == True:
-                    arr.remove('49ers')
-
-                sent = ' '.join(arr)
-                list1.append(sent)
-                
-                unfilPlayers = list1[:]
-                
-                pic.append(modified[12 + spaces])
-                fumbleR.append(modified[13 + spaces])
-                fumbleF.append(modified[14 + spaces])
-                defTD.append(modified[15 + spaces])
-                sfty.append(modified[16 + spaces])
-                spcTD.append(modified[17 + spaces])
-                g.append(modified[18 + spaces])
-        
-        for i in range(0, numPlayers):
-            res = re.split('(\d+)', unfilPlayers[i])
-            temp.extend(res)
-            
-        temp = [i for i in temp if i != '']
-        
-        rank = []
-        ufilName = []
-        name = []
-        cmp = []
-        for i in range(0, numPlayers):
-            rank.append(temp[i*3])
-            ufilName.append(temp[1 + i*3])
-            cmp.append(temp[2+ i*3])
-            if position == 'rb':
-                attRush = cmp
-            if position == 'wr' or position == 'te':
-                receptions = cmp
-            if position == 'k':
-                fg = cmp
-            if position == 'dst':
-                sacks = cmp
-        
-        temp = []
-        team = []
-        for i in range(0, numPlayers):
-            temp.append(ufilName[i].split())
-            lastEl = len(temp[i])-1
-            team.append(temp[i][lastEl])
-            temp[i].remove(team[i])
-            name.append(temp[i][:])
+                txtrank = 'Player Rank: {}'.format(rank)
+                dictionary[txtrank] = {
+                            'year': year,
+                            'name': formatName,
+                            'position': position, 
+                            'rank': rank,
+                            'team': team,
+                            'cmpPass': cmpPass,
+                            'attPass': attPass,
+                            'ydsPass': ydsPass, 
+                            'tdPass': tdPass,
+                            'pic': pic,
+                            'sacks': sacks,
+                            'attRush': attRush, 
+                            'ydsRush': ydsRush, 
+                            'tdRush': tdRush,
+                            'fl': fl
+                            }
     
-        filPlayers = []
-        file = '{} {} stats.csv'.format(year, position)
-        if position == 'qb':
-            for i in range(0, numPlayers):
-                filPlayers.append([year, position, rank[i], name[i], team[i], cmp[i], attPass[i], pct[i], ydsRush[i], tdPass[i], pic[i], sacks[i], attRush[i], ydsRush[i], tdRush[i], fl[i], g[i]])
-                
         if position == 'rb':
-            for i in range(0, numPlayers):
-                filPlayers.append([year, position, rank[i], name[i], team[i], attRush[i], ydsRush[i], long[i], twtyPls[i], tdRush[i], receptions[i], tgt[i], ydsPass[i], tdPass[i], fl[i], g[i]])
+            dictionary = {}
+            for i in range(0, len(table)):
+                rank = table[i][0]
+                name = names[i]
+                team = teams[i]
+                attRush = table[i][2]
+                ydsRush = table[i][3]
+                long = table[i][5]
+                twtyPls = table[i][6]
+                tdRush = table[i][7]
+                rec = table[i][8]
+                tgt = table[i][9]
+                ydsPass = table[i][10]
+                tdPass = table[i][12]
+                fl = table[i][13]
                 
-        if position == 'wr':
-            for i in range(0, numPlayers):
-                filPlayers.append([year, position, rank[i], name[i], team[i], receptions[i], tgt[i], ydsPass[i], long[i], twtyPls[i], tdPass[i], attRush[i], ydsRush[i], tdRush[i], fl[i], g[i]])
+                formatName = '{} {}'.format(name[0], name[1])
                 
-        if position == 'te':
-            for i in range(0, numPlayers):
-                filPlayers.append([year, position, rank[i], name[i], team[i], receptions[i], tgt[i], ydsPass[i], long[i], twtyPls[i], tdPass[i], attRush[i], ydsRush[i], tdRush[i], fl[i], g[i]])
+                txtrank = 'Player Rank: {}'.format(rank)
+                dictionary[txtrank] = {
+                            'year': year,
+                            'name': formatName,
+                            'position': position, 
+                            'rank': rank,
+                            'team': team,
+                            'attRush': attRush, 
+                            'ydsRush': ydsRush,
+                            'long': long,
+                            'twtyPls': twtyPls,
+                            'tdRush': tdRush,
+                            'rec': rec,
+                            'tgt': tgt,
+                            'ydsPass': ydsPass, 
+                            'tdPass': tdPass,
+                            'fl': fl
+                            }
+    
+        if position == 'wr' or position == 'te':
+            dictionary = {}
+            for i in range(0, len(table)):
+                rank = table[i][0]
+                name = names[i]
+                team = teams[i]
+                rec = table[i][2]
+                tgt = table[i][3]
+                ydsPass = table[i][4]
+                long = table[i][6]
+                twtyPls = table[i][7]
+                tdPass = table[i][8]
+                attRush = table[i][9]
+                ydsRush = table[i][10]
+                tdRush = table[i][11]
+                fl = table[i][12]
                 
+                formatName = '{} {}'.format(name[0], name[1])
+                
+                txtrank = 'Player Rank: {}'.format(rank)
+                dictionary[txtrank] = {
+                            'year': year,
+                            'name': formatName,
+                            'position': position, 
+                            'rank': rank,
+                            'team': team,
+                            'rec': rec,
+                            'tgt': tgt,
+                            'ydsPass': ydsPass,
+                            'long': long,
+                            'twtyPls': twtyPls,
+                            'tdPass': tdPass,
+                            'attRush': attRush, 
+                            'ydsRush': ydsRush,
+                            'tdRush': tdRush,
+                            'fl': fl
+                            }
+        
         if position == 'k':
-            for i in range(0, numPlayers):
-                filPlayers.append([year, position, rank[i], name[i], team[i], fg[i], fga[i], pct[i], long[i], u20[i], u30[i], u40[i], p50[i], xpt[i], xpa[i], g[i]])
+            dictionary = {}
+            for i in range(0, len(table)):
+                rank = table[i][0]
+                name = names[i]
+                team = teams[i]
+                fg = table[i][2]
+                fga = table[i][3]
+                long = table[i][5]
+                u20 = table[i][6]
+                u30 = table[i][7]
+                u40 = table[i][8]
+                u50 = table[i][9]
+                p50 = table[i][10]
+                xpt = table[i][11]
+                xpa = table[i][12]
+
+                formatName = '{} {}'.format(name[0], name[1])
                 
+                txtrank = 'Player Rank: {}'.format(rank)
+                dictionary[txtrank] = {
+                            'year': year,
+                            'name': formatName,
+                            'position': position, 
+                            'rank': rank,
+                            'team': team,
+                            'fg': fg,
+                            'fga': fga,
+                            'long': long,
+                            'u20': u20,
+                            'u30': u30,
+                            'u40': u40,
+                            'u50': u50,
+                            'p50': p50,
+                            'xpt': xpt,
+                            'xpa': xpa
+                            }
+    
         if position == 'dst':
-            for i in range(0, numPlayers):
-                filPlayers.append([year, position, rank[i], name[i], team[i], sacks[i], pic[i], fumbleR[i], fumbleF[i], defTD[i], sfty[i], spcTD[i], g[i]])
-
-        return filPlayers
-
-    def createFile(playerData):
-        position = ['qb', 'rb', 'wr', 'te', 'k', 'dst']
-        
-        for pos in range(0, 6):
-            file = 'C:\\Users\\Freew\\OneDrive\\Desktop\\Python Projects\\Fantasy Football\\annual_pos_data\\{} data.txt'.format(position[pos])
-            with open(file, 'w') as file:
-                for item in playerData[pos]:
-                    file.write("%s\n" % item)
-        
-        #Raw Data
-        with open('raw data.txt', 'w') as file:
-            for item in playerData:
-                file.write("%s\n" % item)
+            dictionary = {}
+            for i in range(0, len(table)):
+                rank = table[i][0]
+                name = names[i]
+                team = teams[i]
+                sacks = table[i][2]
+                pic = table[i][3]
+                fr = table[i][4]
+                ff = table[i][5]
+                defTD = table[i][6]
+                sfty = table[i][7]
+                spcTD = table[i][8]
                 
-        print('Done')
+                formatName = '{} {}'.format(name[0], name[1])
+                
+                txtrank = 'Player Rank: {}'.format(rank)
+                dictionary[txtrank] = {
+                            'year': year,
+                            'name': formatName,
+                            'position': position, 
+                            'rank': rank,
+                            'team': team,
+                            'sacks': sacks,
+                            'int': pic,
+                            'fr': fr,
+                            'ff': ff,
+                            'defTD': defTD,
+                            'sfty': sfty,
+                            'spcTD': spcTD
+                            }
+        
+        return dictionary
